@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transcriptor català → XSF</title>
+<style>
+  @font-face { font-family: 'XSF'; src: url('XSF.woff2') format('woff2'); font-display: swap; }
+  :root { --bg:#14151a; --fg:#e8e8ec; --mut:#8a8a93; --acc:#6ad; --pan:#1d1f26; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,sans-serif; line-height:1.5; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.3rem; font-weight: 600; margin-bottom: 2px; }
+  .mut { color: var(--mut); font-size: .85rem; }
+  textarea { width:100%; min-height:110px; background:var(--pan); color:var(--fg); border:1px solid #333; border-radius:10px; padding:12px; font-size:1rem; resize:vertical; }
+  .row { display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; margin:14px 0; }
+  label { font-size:.9rem; }
+  select, input[type=number], input[type=color] { background:var(--pan); color:var(--fg); border:1px solid #333; border-radius:7px; padding:5px 8px; }
+  button { background:var(--acc); color:#06121c; border:0; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; }
+  button.sec { background:#2a2d36; color:var(--fg); }
+  .panel { background:var(--pan); border:1px solid #333; border-radius:12px; padding:18px; margin-top:16px; }
+  #out { font-family:'XSF'; font-size:72px; line-height:1.35; word-break:break-word; min-height:90px; }
+  #debug { white-space:pre-wrap; color:var(--mut); font-family:ui-monospace,monospace; font-size:.8rem; margin-top:12px; }
+  #status { color:var(--acc); font-size:.85rem; min-height:1.2em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Transcriptor català → XSF</h1>
+  <p class="mut">Escriu en català i obtén la transcripció en l'alfabet fonètic XSF. Motor: espeak-ng (fork de l'AINA) compilat a WebAssembly, tot al navegador.</p>
+
+  <textarea id="input" placeholder="Escriu aquí el text en català…  (Ctrl+Enter per transcriure)">una àmfora amb vint metges; el gat menja peix</textarea>
+
+  <div class="row">
+    <label>Dialecte:
+      <select id="dialecte">
+        <option value="ca">Central</option>
+        <option value="ca-va">Valencià</option>
+        <option value="ca-nw">Nord-occidental</option>
+        <option value="ca-ba">Balear</option>
+        <option value="ca-al">Alguerès</option>
+        <option value="ca-ro">Rossellonès</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="tonicitat" checked> indicadors de tonicitat (+)</label>
+    <label><input type="checkbox" id="espais" checked> separar paraules amb espais</label>
+    <button id="go">Transcriu</button>
+    <span id="status">carregant…</span>
+  </div>
+
+  <div class="panel">
+    <div id="out"></div>
+    <div id="debug"></div>
+  </div>
+
+  <div class="row">
+    <label>Mida imatge: <input type="number" id="imgsize" value="96" min="16" max="400" step="8"></label>
+    <label>Color: <input type="color" id="color" value="#000000"></label>
+    <label><input type="checkbox" id="transparent"> fons transparent</label>
+    <button class="sec" id="dl">Descarrega imatge PNG</button>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

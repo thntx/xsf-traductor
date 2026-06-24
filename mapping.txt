@@ -1,0 +1,79 @@
+# MAPEIG FONEMA (IPA del fork espeak-ng de l'AINA) -> GRAFIA XSF
+# Inventari COMPLET i verificat: tret de les definicions reals dels 6 dialectes (ph_catalan*)
+# + renderitzat amb el motor. 46 fonemes + 2 marques.
+# Escriu la teva grafia XSF a la dreta de "->".  Tot el que va darrere de "#" és ajuda.
+# Les variants dialectals d'un mateix so (p. ex. ʃ/ɕ) segurament van a la MATEIXA grafia.
+# Format:  <IPA>  ->  <XSF>      # so · exemple
+
+## VOCALS PLENES (tòniques o no reduïdes)
+a	->	a	# a oberta · pa, casa
+ɛ	->	è	# e oberta · cel, mel
+e	->	é	# e tancada · séc, cadena (valencià/balear/occidental)
+i	->	i	# i · fil, vida
+ɔ	->	ò	# o oberta · cor, roca
+o	->	ó	# o tancada · pou, color
+u	->	u	# u · suc, lluna
+
+## VOCALS REDUÏDES (àtones; central i balear)
+ə	->	x	# vocal neutra (schwa) · pare, cosa
+ɐ	->	x̀	# a reduïda (variant) · final de "casa"
+ʊ	->	x́	# u/o reduïda
+
+## SEMIVOCALS
+j	->	y	# i semivocal · noi, iaia
+w	->	w	# u semivocal · aigua, pou
+
+## OCLUSIVES
+p	->	p	# pare
+b	->	8	# bo
+t	->	t	# taula
+d	->	3	# dau
+k	->	k	# casa
+ɡ	->	5	# gat  (símbol IPA U+0261)
+
+## FRICATIVES
+f	->	f	# fum
+v	->	v	# vi (labiodental: valencià/balear/alguerès; central sovint = b)
+s	->	s	# sí, passa
+z	->	z	# casa, zona
+ɕ	->	1	# so de "x" (alveolopalatal) · caixa  [central]
+ʃ	->	1	# so de "x" (postalveolar) · variant dialectal
+ʑ	->	j	# so de "j" (alveolopalatal) · jove  [central]
+ʒ	->	j	# so de "j" (postalveolar) · variant dialectal
+θ	->	c	# (rar, rossellonès)
+
+## AFRICADES
+ts	->	ts	# tots, potser
+dz	->	dz	# dotze, setze
+tɕ	->	t1	# "tx" (alveolopalatal) · cotxe  [central]
+tʃ	->	t1	# "tx" (postalveolar) · variant dialectal
+dʑ	->	dj	# "tg/tj" (alveolopalatal) · metge  [central]
+dʒ	->	dj	# "tg/tj" (postalveolar) · variant dialectal
+
+## NASALS
+m	->	m	# mare
+n	->	n	# nas
+ɲ	->	ñ	# "ny" · any, canya
+ŋ	->	0	# n velar · banc, sang
+ɱ	->	'	# m labiodental (davant f/v) · àmfora
+
+## LATERALS
+l	->	l	# la, pala
+ɫ	->	l	# l fosca/velar (després de vocal) · sol, mal  (pots mapar-la = l)
+ʎ	->	7	# "ll" · fill, lluny
+
+## RÒTIQUES
+ɾ	->	r	# r suau (vibrant simple) · cara, pera
+r	->	4	# "rr" (vibrant múltiple) · carro, riu, terra
+
+## AL·LÒFONS ESPIRANTS (b/d/g "toves" entre vocals)
+β	->	b	# b tova · poble   (pots mapar-la = b)
+ð	->	d	# d tova · cada    (pots mapar-la = d)
+ɣ	->	g	# g tova · aigua   (pots mapar-la = g)
+
+## MARQUES SUPRASEGMENTALS (per a l'opció de tonicitat)
+ˈ	->	+	# accent tònic PRIMARI (va abans de la síl·laba tònica)
+ˌ	->	+	# accent secundari
+
+## NASAL DENTAL (afegida al motor)
+n̪	->	9	# n davant t/d (dental) · vint, tendre, quaranta

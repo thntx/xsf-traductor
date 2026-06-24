@@ -1,0 +1,89 @@
+name: build-and-deploy
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Dependències de build
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake libtool pkg-config make gcc ronn
+
+      - name: Emscripten (emsdk)
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Clonar el fork de l'AINA
+        run: git clone --depth 1 --single-branch --branch new_catalan_accents https://github.com/projecte-aina/espeak-ng espeak-ng
+
+      - name: Aplicar el pegat de la nasal dental (XSF)
+        run: node patch_dental.js espeak-ng/phsource
+
+      - name: Build natiu (genera espeak-ng-data)
+        working-directory: espeak-ng
+        run: |
+          set -e
+          ./autogen.sh
+          ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer
+          make -j$(nproc)
+
+      - name: Build WebAssembly
+        working-directory: espeak-ng
+        run: |
+          set -e
+          # ucd-tools per a emscripten
+          cd src/ucd-tools
+          ./autogen.sh || true
+          sed -i 's/ChangeLog\.md/CHANGELOG.md/g' autogen.sh 2>/dev/null || true
+          ./configure
+          make clean
+          emconfigure ./configure
+          emmake make clean
+          emmake make
+          cd ../..
+          emconfigure ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer
+          emmake make clean
+          emmake make src/espeak-ng
+          mv src/espeak-ng src/espeak-ng.bak || true
+          emcc -O2 \
+            -s EXPORT_ES6=1 -s MODULARIZE=1 -s 'EXPORT_NAME=ESpeakNG' \
+            -s EXPORTED_RUNTIME_METHODS=FS -s FORCE_FILESYSTEM=1 \
+            -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB \
+            src/.libs/libespeak-ng.so src/espeak-ng.o -o espeak-ng.js \
+            --embed-file espeak-ng-data@/usr/local/share/espeak-ng-data/
+          ls -la espeak-ng.js espeak-ng.wasm
+
+      - name: Muntar el lloc
+        run: |
+          set -e
+          mkdir -p _site
+          cp index.html app.js mapping.txt XSF.woff2 .nojekyll _site/
+          cp espeak-ng/espeak-ng.js espeak-ng/espeak-ng.wasm _site/
+          ls -la _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: _site }
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
