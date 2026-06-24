@@ -45,12 +45,11 @@ jobs:
         working-directory: espeak-ng
         run: |
           set -e
-          # ucd-tools per a emscripten
+          # ucd-tools per a emscripten (configure ja existeix del build natiu;
+          # toquem els fitxers que automake exigeix per si cal regenerar-lo)
           cd src/ucd-tools
-          ./autogen.sh || true
-          sed -i 's/ChangeLog\.md/CHANGELOG.md/g' autogen.sh 2>/dev/null || true
-          ./configure
-          make clean
+          touch NEWS AUTHORS README ChangeLog 2>/dev/null || true
+          [ -f configure ] || ./autogen.sh
           emconfigure ./configure
           emmake make clean
           emmake make
