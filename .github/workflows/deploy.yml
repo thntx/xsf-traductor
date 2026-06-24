@@ -38,23 +38,18 @@ jobs:
         run: |
           set -e
           ./autogen.sh
-          ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer
+          ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer --disable-maintainer-mode
           make -j$(nproc)
 
       - name: Build WebAssembly
         working-directory: espeak-ng
         run: |
           set -e
-          # ucd-tools per a emscripten (configure ja existeix del build natiu;
-          # toquem els fitxers que automake exigeix per si cal regenerar-lo)
-          cd src/ucd-tools
-          touch NEWS AUTHORS README ChangeLog 2>/dev/null || true
-          [ -f configure ] || ./autogen.sh
-          emconfigure ./configure
-          emmake make clean
-          emmake make
-          cd ../..
-          emconfigure ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer
+          # desa les dades compilades pel build natiu (amb el pegat de la nasal dental)
+          # abans que "make clean" les esborri
+          cp -r espeak-ng-data /tmp/eng-data
+          # reconfigura per a emscripten i reconstrueix el binari (i ucd-tools com a dependència)
+          emconfigure ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer --disable-maintainer-mode
           emmake make clean
           emmake make src/espeak-ng
           mv src/espeak-ng src/espeak-ng.bak || true
@@ -63,7 +58,7 @@ jobs:
             -s EXPORTED_RUNTIME_METHODS=FS -s FORCE_FILESYSTEM=1 \
             -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB \
             src/.libs/libespeak-ng.so src/espeak-ng.o -o espeak-ng.js \
-            --embed-file espeak-ng-data@/usr/local/share/espeak-ng-data/
+            --embed-file /tmp/eng-data@/usr/local/share/espeak-ng-data/
           ls -la espeak-ng.js espeak-ng.wasm
 
       - name: Muntar el lloc
