@@ -22,50 +22,50 @@ async function toIPA(text, voice) {
   try { return m.FS.readFile('_g', { encoding: 'utf8' }).trim(); } catch (e) { return ''; }
 }
 
-// ---- IPA -> XSF (només mapeig + tonicitat; la fonologia la fa el motor) ----
-function tokenizeWord(w) {
-  // separador de fonemes "_"; treu accents (ˈ ˌ) i marques de durada/lligadura,
-  // PERÒ conserva el diacrític dental U+032A (n̪) perquè es mapeja a una grafia pròpia.
-  return w.split('_').filter(Boolean).map(tok => ({
-    ph: tok.replace(/^[ˈˌ]+/, '').replace(/[ːʰ‿͡‍]/g, ''),
-    stress: /^[ˈˌ]/.test(tok),
-  })).filter(t => t.ph);
-}
+// ---- IPA -> XSF ----
 const VOWELS = new Set(['a', 'ɛ', 'e', 'i', 'ɔ', 'o', 'u', 'ə', 'ɐ', 'ʊ']);
-function wordToXSF(toks, map, opts) {
-  const keys = toks.map(t => (t.ph in map) ? map[t.ph] : '«' + t.ph + '»');
-  const unknown = toks.filter(t => !(t.ph in map)).map(t => t.ph);
-  // El + va tan a l'esquerra com es pot HAVENT PASSAT >=1 vocal I >=1 consonant
-  // (la consonant pot ser l'onset, davant la vocal, o la coda, després):
-  //  - amb onset  -> + just després de la vocal (nàncora -> nà+, gat -> ga+)
-  //  - sense onset -> + després de la primera consonant que sigui CODA (àm -> a'+)
-  //  - sense onset i sense coda (síl·laba oberta) -> + després de la vocal (una -> u+)
-  const plusAt = new Set();
-  if (opts.tonicitat) {
-    toks.forEach((t, s) => {
-      if (!t.stress) return;
-      const onsetBefore = s > 0 && !VOWELS.has(toks[s - 1].ph);
-      let p = s;
-      if (!onsetBefore) {
-        const n1 = toks[s + 1], n2 = toks[s + 2];
-        if (n1 && !VOWELS.has(n1.ph) && (!n2 || !VOWELS.has(n2.ph))) p = s + 1; // n1 és coda
-      }
-      plusAt.add(p);
-    });
-  }
-  let out = '';
-  for (let i = 0; i < keys.length; i++) { out += keys[i]; if (plusAt.has(i)) out += (map['ˈ'] || '+'); }
-  return { out, unknown };
-}
 async function convert(text, opts) {
   const map = await loadMap();
   const ipa = await toIPA(text, opts.dialecte || 'ca');
-  const parts = [], unknown = new Set();
-  for (const w of ipa.split(/\s+/).filter(Boolean)) {
-    const r = wordToXSF(tokenizeWord(w), map, opts);
-    parts.push(r.out); r.unknown.forEach(u => unknown.add(u));
+  // Tokens plans de TOTA la frase (amb índex de paraula). Cal mirar la frase sencera
+  // perquè les LLIGATURES (consonant+vocal) poden travessar els límits de paraula quan
+  // no es posen espais (p. ex. "claven àncores" -> ...n + à = "na").
+  const toks = []; const unknown = new Set();
+  ipa.split(/\s+/).filter(Boolean).forEach((w, wi) => {
+    w.split('_').filter(Boolean).forEach(tok => {
+      const stress = /^[ˈˌ]/.test(tok);
+      const ph = tok.replace(/^[ˈˌ]+/, '').replace(/[ːʰ‿͡‍]/g, ''); // conserva el dental n̪ (U+032A)
+      if (!ph) return;
+      if (!(ph in map)) unknown.add(ph);
+      toks.push({ key: (ph in map) ? map[ph] : '«' + ph + '»', vowel: VOWELS.has(ph), stress, w: wi });
+    });
+  });
+  // i, j consecutius s'enganxen (formen lligatura) si són a la mateixa paraula, o sempre si no hi ha espais
+  const adj = (i, j) => i >= 0 && j < toks.length && (toks[i].w === toks[j].w || !opts.espais);
+  // El + va DESPRÉS DE LA LLIGATURA de la vocal tònica (cal >=1 vocal i >=1 consonant):
+  //  - vocal amb consonant enganxada al davant -> lligatura CV -> + just després de la vocal
+  //  - si no, i la consonant de després és CODA (no s'enganxa a la vocal següent) -> + després d'ella
+  //  - si no hi ha cap consonant a la lligatura (síl·laba oberta sense onset) -> + després de la vocal
+  const plus = new Set();
+  if (opts.tonicitat) {
+    toks.forEach((t, s) => {
+      if (!t.stress) return;
+      let p = s;
+      const prevC = adj(s - 1, s) && !toks[s - 1].vowel;
+      if (!prevC && adj(s, s + 1) && !toks[s + 1].vowel) {
+        const ligForward = adj(s + 1, s + 2) && toks[s + 2].vowel; // la consonant s'enganxa a la vocal de després
+        if (!ligForward) p = s + 1;
+      }
+      plus.add(p);
+    });
   }
-  return { xsf: parts.join(opts.espais ? ' ' : ''), ipa, unknown: [...unknown] };
+  let out = '';
+  toks.forEach((t, i) => {
+    if (i > 0 && opts.espais && toks[i].w !== toks[i - 1].w) out += ' ';
+    out += t.key;
+    if (plus.has(i)) out += (map['ˈ'] || '+');
+  });
+  return { xsf: out, ipa, unknown: [...unknown] };
 }
 
 // ---- UI ----
