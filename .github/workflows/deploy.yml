@@ -55,16 +55,19 @@ jobs:
           # desa les dades compilades pel build natiu (amb el pegat de la nasal dental)
           # abans que "make clean" les esborri
           cp -r espeak-ng-data /tmp/eng-data
-          # reconfigura per a emscripten i reconstrueix el binari (i ucd-tools com a dependència)
-          emconfigure ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer --disable-maintainer-mode
+          # reconfigura per a emscripten amb ENLLAÇ ESTÀTIC (sense .so: si no, el wasm
+          # intenta carregar libespeak-ng.so dinàmicament en temps d'execució)
+          emconfigure ./configure --without-async --without-mbrola --without-sonic --without-pcaudiolib --without-klatt --without-speechplayer --disable-maintainer-mode --enable-static --disable-shared
           emmake make clean
           emmake make src/espeak-ng
-          mv src/espeak-ng src/espeak-ng.bak || true
+          echo "--- artefactes ---"; ls -la src/.libs/ 2>/dev/null || true; ls -la src/*.o 2>/dev/null || true
+          MAIN=$(ls src/espeak-ng.o src/espeak_ng-espeak-ng.o src/.libs/espeak-ng.o src/.libs/espeak_ng-espeak-ng.o 2>/dev/null | head -1)
+          echo "objecte main: $MAIN"
           emcc -O2 \
             -s EXPORT_ES6=1 -s MODULARIZE=1 -s 'EXPORT_NAME=ESpeakNG' \
             -s EXPORTED_RUNTIME_METHODS=FS -s FORCE_FILESYSTEM=1 \
             -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB \
-            src/.libs/libespeak-ng.so src/espeak-ng.o -o espeak-ng.js \
+            "$MAIN" src/.libs/libespeak-ng.a -o espeak-ng.js \
             --embed-file /tmp/eng-data@/usr/local/share/espeak-ng-data/
           ls -la espeak-ng.js espeak-ng.wasm
 
