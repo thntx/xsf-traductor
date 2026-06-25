@@ -11,7 +11,7 @@ Eina web que transcriu text en català a l'alfabet fonètic **XSF**. Tot s'execu
 
 ## Nasal dental dins el motor
 La `n` dental (davant `t`/`d`, p. ex. *vint*, *tendre*, i els números) s'afegeix **al codi del
-traductor**, no com una capa externa: `patch_dental.js` modifica el `phsource` del fork seguint la
+transcriptor**, no com una capa externa: `patch_dental.js` modifica el `phsource` del fork seguint la
 convenció d'espeak (`t[`/`d[`): defineix el fonema `n[` (AFI `n̪`) i fa que cada `n` catalana
 davant `t`/`d` hi canviï (`ChangePhoneme(n[)`). A `mapping.txt`, `n̪ → 9`.
 

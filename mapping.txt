@@ -44,11 +44,11 @@ z	->	z	# casa, zona
 
 ## AFRICADES
 ts	->	ts	# tots, potser
-dz	->	dz	# dotze, setze
+dz	->	3z	# dotze, setze
 tɕ	->	t1	# "tx" (alveolopalatal) · cotxe  [central]
 tʃ	->	t1	# "tx" (postalveolar) · variant dialectal
-dʑ	->	dj	# "tg/tj" (alveolopalatal) · metge  [central]
-dʒ	->	dj	# "tg/tj" (postalveolar) · variant dialectal
+dʑ	->	3j	# "tg/tj" (alveolopalatal) · metge  [central]
+dʒ	->	3j	# "tg/tj" (postalveolar) · variant dialectal
 
 ## NASALS
 m	->	m	# mare
