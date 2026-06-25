@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: engine
-          key: engine-v2-${{ hashFiles('patch_dental.js') }}
+          key: engine-v3-${{ hashFiles('patch_dental.js', 'ca_additions.txt') }}
 
       - uses: actions/setup-node@v4
         if: steps.engine.outputs.cache-hit != 'true'
@@ -46,6 +46,12 @@ jobs:
       - name: Aplicar el pegat de la nasal dental (XSF)
         if: steps.engine.outputs.cache-hit != 'true'
         run: node patch_dental.js espeak-ng/phsource
+
+      - name: Aplicar correccions al diccionari català (ca_list)
+        if: steps.engine.outputs.cache-hit != 'true'
+        run: |
+          printf '\n' >> espeak-ng/dictsource/ca_list
+          cat ca_additions.txt >> espeak-ng/dictsource/ca_list
 
       - name: Fix compat/wctype per a emscripten (isw* vs ucd_*)
         if: steps.engine.outputs.cache-hit != 'true'
