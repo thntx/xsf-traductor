@@ -109,7 +109,7 @@ function processWords(words, srcWords, opts) {
     for (let i = 0; i + 1 < toks.length; i++) {
       const a = toks[i], b = toks[i + 1];
       if (a.dead || b.dead || a.w === b.w || !a.vowel || !b.vowel) continue;
-      if (opts.except.has(a.word) || opts.except.has(b.word)) continue;
+      if (!opts.elisionPairs.has(cls(a.ph) + cls(b.ph))) continue;     // només els contactes de la llista
       if (a.neutral && b.neutral) { if (b.stress) a.dead = true; else b.dead = true; }
       else if (a.neutral) a.dead = true;
       else if (b.neutral) b.dead = true;
@@ -118,7 +118,7 @@ function processWords(words, srcWords, opts) {
 
   const live = toks.filter(t => !t.dead);
   let ipaShow = ''; let lastW = -1;
-  live.forEach(t => { if (lastW !== -1 && t.w !== lastW) ipaShow += ' '; lastW = t.w; ipaShow += (t.stress ? 'ˈ' : '') + t.ph + (t.glide ? '̯' : ''); });
+  live.forEach(t => { if (lastW !== -1 && t.w !== lastW && opts.espais) ipaShow += ' '; lastW = t.w; ipaShow += (t.stress ? 'ˈ' : '') + t.ph + (t.glide ? '̯' : ''); });
 
   const adj = (i, j) => i >= 0 && j < live.length && (live[i].w === live[j].w || !opts.espais);
   // PENJADES: cada vocal s'aparella amb el seu ONSET (consonant abans -> glif CV) o, si no en té,
@@ -195,22 +195,42 @@ async function convert(text, opts) {
   return { xsf: r.xsf, afi: r.ipa, unknown: r.unknown };
 }
 
-// ---- opcions editables (textareas) amb persistència ----
-const DEFAULTS = {
-  pairs: 'e x\no x\ni o\nx i\nx u',
-  except: '',
-  subs: 'però  prò+',
-};
-function parsePairs(s) {
-  const set = new Set();
-  s.split('\n').forEach(l => { const p = l.trim().split(/\s+/); if (p.length >= 2) set.add(vclass(p[0]) + vclass(p[1])); });
-  return set;
-}
-function parseWords(s) { return new Set(s.split(/[\s,]+/).map(w => w.trim().toLowerCase()).filter(Boolean)); }
-function parseSubs(s) {
-  const m = new Map();
-  s.split('\n').forEach(l => { const p = l.trim().split(/\s+/); if (p.length >= 2) m.set(p[0].toLowerCase(), p.slice(1).join(' ')); });
-  return m;
+// ---- llistes interactives (diftongs / elisions / substitucions) amb persistència ----
+// diftongs catalans per defecte: glides creixents (i/u + V), ə + i/u, i la "rodonització" e/o
+const DIFT_DEF = [['i', 'a'], ['i', 'e'], ['i', 'o'], ['i', 'u'], ['u', 'a'], ['u', 'e'], ['u', 'i'], ['u', 'o'], ['x', 'i'], ['x', 'u'], ['e', 'x'], ['o', 'x']];
+// elisions per defecte: tots els contactes amb vocal neutra (x = ə)
+const ELIS_DEF = [['x', 'a'], ['x', 'e'], ['x', 'i'], ['x', 'o'], ['x', 'u'], ['x', 'x'], ['a', 'x'], ['e', 'x'], ['i', 'x'], ['o', 'x'], ['u', 'x']];
+const SUBS_DEF = [['però', 'prò+']];
+let getDift, getElis, getSubs;
+function pairsFrom(arr) { const s = new Set(); arr.forEach(([a, b]) => { if (a && b) s.add(vclass(a.trim()) + vclass(b.trim())); }); return s; }
+function subsFrom(arr) { const m = new Map(); arr.forEach(([w, x]) => { if (w && x) m.set(w.trim().toLowerCase(), x.trim()); }); return m; }
+function buildList(host, key, defaults, fields, onchange) {
+  let data;
+  try { const s = JSON.parse(localStorage.getItem(key)); data = Array.isArray(s) ? s : null; } catch (e) { data = null; }
+  if (!data) data = defaults.map(r => r.slice());
+  const save = () => { localStorage.setItem(key, JSON.stringify(data)); onchange(); };
+  function render() {
+    host.innerHTML = '';
+    data.forEach((row, i) => {
+      const r = document.createElement('div'); r.className = 'lrow';
+      fields.forEach((f, c) => {
+        const inp = document.createElement('input'); inp.className = 'lin' + (f.wide ? ' lsub' : ''); inp.placeholder = f.ph || ''; inp.value = row[c] || '';
+        inp.addEventListener('input', () => { data[i][c] = inp.value; save(); });
+        r.appendChild(inp);
+      });
+      const x = document.createElement('button'); x.className = 'lx'; x.textContent = '✕'; x.title = 'elimina';
+      x.addEventListener('click', () => { data.splice(i, 1); save(); render(); });
+      r.appendChild(x); host.appendChild(r);
+    });
+    const btns = document.createElement('div'); btns.className = 'lbtns';
+    const add = document.createElement('button'); add.className = 'sec'; add.textContent = '+ Afegir';
+    add.addEventListener('click', () => { data.push(fields.map(() => '')); save(); render(); });
+    const rst = document.createElement('button'); rst.className = 'sec'; rst.textContent = '↺ Restablir';
+    rst.addEventListener('click', () => { data = defaults.map(r => r.slice()); save(); render(); });
+    btns.appendChild(add); btns.appendChild(rst); host.appendChild(btns);
+  }
+  render();
+  return () => data;
 }
 
 // ---- UI ----
@@ -228,9 +248,9 @@ function readOpts() {
     diftongs: $('diftongs').checked,
     upHangVow: $('uphangv').checked,
     upHangCons: $('uphangc').checked,
-    pairs: parsePairs($('pairs').value),
-    except: parseWords($('except').value),
-    subs: parseSubs($('subs').value),
+    pairs: pairsFrom(getDift()),
+    elisionPairs: pairsFrom(getElis()),
+    subs: subsFrom(getSubs()),
   };
 }
 async function run() {
@@ -242,15 +262,14 @@ async function run() {
     const xsfOut = OUT_XSF(opts.mode);
     $('out').classList.toggle('afi', !xsfOut);
     $('out').textContent = xsfOut ? r.xsf : r.afi;
-    $('debug').textContent = (xsfOut && opts.mode === 'cat-xsf') ? ('AFI: ' + r.afi) : '';
-    if (r.unknown && r.unknown.length) $('debug').textContent += (xsfOut ? '\n' : '') + 'sense mapeig: ' + r.unknown.join(' ');
+    $('debug').textContent = (r.unknown && r.unknown.length) ? ('sense mapeig: ' + r.unknown.join(' ')) : '';
     $('status').textContent = ''; window._out = $('out').textContent; window._xsf = xsfOut;
   } catch (e) { $('status').textContent = 'error: ' + e.message; }
 }
 function syncMode() {
   const m = $('mode').value;
   const ph = { 'cat-xsf': 'text en català…', 'cat-afi': 'text en català…', 'afi-xsf': 'text en AFI…', 'xsf-afi': 'text en XSF…' };
-  $('input').placeholder = ph[m] + '  (Ctrl+Enter)';
+  $('input').placeholder = ph[m];
   $('catonly').style.display = (m === 'cat-xsf' || m === 'cat-afi') ? '' : 'none';
 }
 async function downloadImage() {
@@ -268,18 +287,15 @@ async function downloadImage() {
   lines.forEach((l, i) => ctx.fillText(l, pad, pad + i * lh));
   const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'xsf.png'; a.click();
 }
-function initOpts() {
-  for (const id of ['pairs', 'except', 'subs']) {
-    const saved = localStorage.getItem('xsf_' + id);
-    $(id).value = (saved !== null) ? saved : DEFAULTS[id];
-    $(id).addEventListener('input', () => { localStorage.setItem('xsf_' + id, $(id).value); });
-  }
-}
 ['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'elisio', 'diftongs', 'uphangv', 'uphangc'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
 $('dl').addEventListener('click', downloadImage);
 let _deb;
 const liveRun = () => { clearTimeout(_deb); _deb = setTimeout(run, 180); };  // transcripció en viu (debounce)
 $('input').addEventListener('input', liveRun);
-['pairs', 'except', 'subs'].forEach(id => $(id).addEventListener('input', liveRun));
-initOpts(); syncMode();
+function initLists() {
+  getDift = buildList($('diftList'), 'xsf_dift', DIFT_DEF, [{ ph: 'V1' }, { ph: 'V2' }], liveRun);
+  getElis = buildList($('elisList'), 'xsf_elis', ELIS_DEF, [{ ph: 'V1' }, { ph: 'V2' }], liveRun);
+  getSubs = buildList($('subsList'), 'xsf_subs2', SUBS_DEF, [{ ph: 'paraula', wide: true }, { ph: 'XSF', wide: true }], liveRun);
+}
+initLists(); syncMode();
 loadMap().then(() => { $('status').textContent = 'a punt'; run(); });
