@@ -275,9 +275,11 @@ function initOpts() {
     $(id).addEventListener('input', () => { localStorage.setItem('xsf_' + id, $(id).value); });
   }
 }
-$('go').addEventListener('click', run);
 ['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'elisio', 'diftongs', 'uphangv', 'uphangc'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
 $('dl').addEventListener('click', downloadImage);
-$('input').addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'Enter') run(); });
+let _deb;
+const liveRun = () => { clearTimeout(_deb); _deb = setTimeout(run, 180); };  // transcripció en viu (debounce)
+$('input').addEventListener('input', liveRun);
+['pairs', 'except', 'subs'].forEach(id => $(id).addEventListener('input', liveRun));
 initOpts(); syncMode();
-loadMap().then(() => { $('status').textContent = 'a punt'; });
+loadMap().then(() => { $('status').textContent = 'a punt'; run(); });
