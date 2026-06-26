@@ -87,16 +87,6 @@ function interlexContact(a, b, o) {
   if (at && o.round.has(cls(at.ph)) && GLIDE[at.ph]) return 'diftong';
   return 'hiat';
 }
-// la vocal-nucli (índex j; el seu predecessor és la vocal que potser glida) PENJARIA?
-// Penja si no té coda pròpia: fi de paraula, una altra vocal a la dreta, o una consonant
-// que se l'endú la vocal següent (és onset, CV) en lloc de quedar-li com a coda (VC).
-function nucleusHangs(toks, j) {
-  const b = toks[j], c = toks[j + 1];
-  if (!c || c.w !== b.w || c.vowel) return true;
-  const v = toks[j + 2];
-  if (v && v.w === b.w && v.vowel) return true;
-  return false;
-}
 const STRESS_RE = /^[ˈˌ]/;
 const DIAC = /[ːʰ‿͡‍]/g;
 const cls = v => ({ 'ɛ': 'e', 'ɔ': 'o', 'ɐ': 'ə', 'ʊ': 'u' }[v] || v);
@@ -146,26 +136,12 @@ function processWords(words, srcWords, opts) {
     toks.push({ ph: p, key: (p in map) ? map[p] : '«' + p + '»', vowel: VOWELS.has(p), neutral: NEUTRAL.has(p), stress, w: wi, word: srcWords ? (srcWords[wi] || '') : '', glide: false, dead: false });
   }));
 
-  // nombre de síl·labes per paraula (nuclis vocàlics) abans de processar contactes
-  const syl = {};
-  for (const t of toks) if (t.vowel) syl[t.w] = (syl[t.w] || 0) + 1;
-  // PROSÒDIA: contacte de vocals adjacents (una sola passada, d'esquerra a dreta)
-  const RNUC = ['a', 'e', 'o', 'ə'];
+  // PROSÒDIA INTERLÈXICA: contacte de vocals entre paraules diferents (els diftongs interns
+  // de paraula els deixem tal com els fa el motor).
   for (let i = 0; i + 1 < toks.length; i++) {
     const a = toks[i], b = toks[i + 1];
-    if (a.dead || b.dead || a.glide || b.glide || !a.vowel || !b.vowel) continue;
-    let beh = 'hiat';
-    if (a.w === b.w) {
-      // INTRALÈXICA: forçar diftongs creixents. Només i/u àtona + a/e/o/ə on la 2a vocal
-      // quedaria PENJADA, en paraules de més de 2 síl·labes, i saltant hiats amb dièresi (ï/ü).
-      const qa = cls(a.ph);
-      if (opts.forceRising && !a.stress && (qa === 'i' || qa === 'u') &&
-          RNUC.includes(cls(b.ph)) && (syl[a.w] || 0) > 2 &&
-          !/[ïü]/.test(a.word || '') && nucleusHangs(toks, i + 1)) beh = 'diftong';
-    } else {
-      beh = interlexContact(a, b, opts);
-    }
-    applyContact(beh, a, b);
+    if (a.dead || b.dead || a.glide || b.glide || !a.vowel || !b.vowel || a.w === b.w) continue;
+    applyContact(interlexContact(a, b, opts), a, b);
   }
 
   const live = toks.filter(t => !t.dead);
@@ -304,7 +280,6 @@ function readOpts() {
     iSchwa: $('pischwa').value,
     uSchwa: $('puschwa').value,
     round: new Set(['i', 'e', 'u', 'o'].filter(q => $('prnd_' + q).checked)),
-    forceRising: $('pforce').checked,
     subs: subsFrom(getSubs()),
   };
 }
@@ -342,7 +317,7 @@ async function downloadImage() {
   lines.forEach((l, i) => ctx.fillText(l, pad, pad + i * lh));
   const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'xsf.png'; a.click();
 }
-['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'uphangv', 'uphangc', 'pfusio', 'pequal', 'pschwamid', 'pschwai', 'pschwau', 'paschwa', 'peschwa', 'poschwa', 'pischwa', 'puschwa', 'prnd_i', 'prnd_e', 'prnd_u', 'prnd_o', 'pforce'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
+['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'uphangv', 'uphangc', 'pfusio', 'pequal', 'pschwamid', 'pschwai', 'pschwau', 'paschwa', 'peschwa', 'poschwa', 'pischwa', 'puschwa', 'prnd_i', 'prnd_e', 'prnd_u', 'prnd_o'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
 $('dl').addEventListener('click', downloadImage);
 let _deb;
 const liveRun = () => { clearTimeout(_deb); _deb = setTimeout(run, 180); };  // transcripció en viu (debounce)
