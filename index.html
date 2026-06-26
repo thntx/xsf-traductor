@@ -86,7 +86,7 @@
   </div>
   <div id="debug"></div>
 
-  <details open>
+  <details open id="ortobox">
     <summary>Opcions Ortogràfiques</summary>
     <div class="body">
       <div class="row">
@@ -118,20 +118,20 @@
       <div class="optblock">
         <span class="opttitle">X/A + Tònica</span>
         <div class="prow">
-          <label><span class="v">È/É</span> <select id="sx_e"><option value="elide">Elidir</option><option value="hiat">Hiat</option></select></label>
-          <label><span class="v">I</span> <select id="sx_i"><option value="elide">Elidir</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
-          <label><span class="v">U</span> <select id="sx_u"><option value="elide">Elidir</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
-          <label><span class="v">Ò/Ó</span> <select id="sx_o"><option value="elide">Elidir</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">E</span> <select id="sx_e"><option value="elide">Elisió</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">I</span> <select id="sx_i"><option value="elide">Elisió</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">U</span> <select id="sx_u"><option value="elide">Elisió</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">O</span> <select id="sx_o"><option value="elide">Elisió</option><option value="hiat">Hiat</option></select></label>
         </div>
       </div>
 
       <div class="optblock">
         <span class="opttitle">Tònica + X/A</span>
         <div class="prow">
-          <label><span class="v">È/É</span> <select id="xs_e"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elidir</option></select></label>
-          <label><span class="v">I</span> <select id="xs_i"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elidir</option></select></label>
-          <label><span class="v">U</span> <select id="xs_u"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elidir</option></select></label>
-          <label><span class="v">Ò/Ó</span> <select id="xs_o"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elidir</option></select></label>
+          <label><span class="v">E</span> <select id="xs_e"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">I</span> <select id="xs_i"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">U</span> <select id="xs_u"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">O</span> <select id="xs_o"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
         </div>
       </div>
 
@@ -147,7 +147,6 @@
 
       <div class="optblock">
         <span class="opttitle">Substitucions</span>
-        <p class="mut">Força la transcripció XSF d'una paraula concreta (p. ex. però → prò+):</p>
         <div id="subsList"></div>
       </div>
     </div>

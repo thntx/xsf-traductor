@@ -252,9 +252,7 @@ function buildList(host, key, defaults, fields, onchange) {
     const btns = document.createElement('div'); btns.className = 'lbtns';
     const add = document.createElement('button'); add.className = 'sec'; add.textContent = '+ Afegir';
     add.addEventListener('click', () => { data.push(fields.map(() => '')); save(); render(); });
-    const rst = document.createElement('button'); rst.className = 'sec'; rst.textContent = '↺ Restablir';
-    rst.addEventListener('click', () => { data = defaults.map(r => r.slice()); save(); render(); });
-    btns.appendChild(add); btns.appendChild(rst); host.appendChild(btns);
+    btns.appendChild(add); host.appendChild(btns);
   }
   render();
   return () => data;
@@ -298,6 +296,7 @@ function syncMode() {
   const ph = { 'cat-xsf': 'text en català…', 'cat-afi': 'text en català…', 'afi-xsf': 'text en AFI…', 'xsf-afi': 'text en XSF…' };
   $('input').placeholder = ph[m];
   $('catonly').style.display = (m === 'cat-xsf' || m === 'cat-afi') ? '' : 'none';
+  $('ortobox').style.display = OUT_XSF(m) ? '' : 'none';   // les opcions ortogràfiques només per a sortida XSF
 }
 async function downloadImage() {
   if (!window._xsf) return;                               // només quan la sortida és XSF
