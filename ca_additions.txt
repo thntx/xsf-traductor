@@ -114,3 +114,24 @@ sobrecors	,sob**@k'ORs
 enfonso	@Mf'onzu
 enfonses	@Mf'onz@s
 enfonsen	@Mf'onz@n
+// s intervocàlica sorda (DDCOR 2.10) — corregeix z->s del motor
+aerosol	@e2**us'Ol
+aerosols	@e2**us'Ols
+cromosoma	k**umus'om@
+cromosomes	k**umus'om@s
+decasíl·lab	d@k@s'ill@p
+decasíl·labs	d@k@s'ill@ps
+dinosaure	dinus'aw**@
+dinosaures	dinus'aw**@s
+ictiosaure	iktius'aw**@
+ictiosaures	iktius'aw**@s
+idiosincràsia	iDiusiNk**'asi@
+idiosincràsies	iDiusiNk**'asi@s
+liposoma	lipus'om@
+liposomes	lipus'om@s
+liposucció	lipusuksi'o
+liposuccions	lipusuksi'ons
+meteosat	m@te2us'at
+meteosats	m@te2us'ats
+pterosaure	pt@**us'aw**@
+pterosaures	pt@**us'aw**@s

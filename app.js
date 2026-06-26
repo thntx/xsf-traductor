@@ -273,7 +273,7 @@ function readOpts() {
     sistema: $('sistema').value,
     upHangVow: $('uphangv').checked,
     upHangCons: $('uphangc').checked,
-    fuse: new Set([['fus_a', 'a'], ['fus_E', 'ɛ'], ['fus_e', 'e'], ['fus_u', 'u'], ['fus_O', 'ɔ'], ['fus_o', 'o']].filter(([id]) => $(id).checked).map(([, k]) => k)),
+    fuse: new Set([['fus_a', 'a'], ['fus_i', 'i'], ['fus_E', 'ɛ'], ['fus_e', 'e'], ['fus_u', 'u'], ['fus_O', 'ɔ'], ['fus_o', 'o']].filter(([id]) => $(id).checked).map(([, k]) => k)),
     sxE: $('sx_e').value, sxI: $('sx_i').value, sxU: $('sx_u').value, sxO: $('sx_o').value,
     xsE: $('xs_e').value, xsI: $('xs_i').value, xsU: $('xs_u').value, xsO: $('xs_o').value,
     round: new Set(['i', 'e', 'u', 'o'].filter(q => $('prnd_' + q).checked)),
@@ -314,7 +314,7 @@ async function downloadImage() {
   lines.forEach((l, i) => ctx.fillText(l, pad, pad + i * lh));
   const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'xsf.png'; a.click();
 }
-['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'uphangv', 'uphangc', 'fus_a', 'fus_E', 'fus_e', 'fus_u', 'fus_O', 'fus_o', 'sx_e', 'sx_i', 'sx_u', 'sx_o', 'xs_e', 'xs_i', 'xs_u', 'xs_o', 'prnd_i', 'prnd_e', 'prnd_u', 'prnd_o'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
+['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'uphangv', 'uphangc', 'fus_a', 'fus_i', 'fus_E', 'fus_e', 'fus_u', 'fus_O', 'fus_o', 'sx_e', 'sx_i', 'sx_u', 'sx_o', 'xs_e', 'xs_i', 'xs_u', 'xs_o', 'prnd_i', 'prnd_e', 'prnd_u', 'prnd_o'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
 $('dl').addEventListener('click', downloadImage);
 let _deb;
 const liveRun = () => { clearTimeout(_deb); _deb = setTimeout(run, 180); };  // transcripció en viu (debounce)
