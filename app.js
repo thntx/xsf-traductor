@@ -146,7 +146,7 @@ function processWords(words, srcWords, opts) {
     const integral = t.vowel
       ? ((t.comp && opts.sistema === 'bkk') || (!t.comp && opts.upHangVow))
       : ((t.comp && opts.sistema === 'ktb') || (!t.comp && opts.upHangCons));
-    if (integral) t.key = t.vowel ? t.key.toUpperCase() : (t.key.length === 1 ? integralOf(t.key) : t.key.toUpperCase());
+    if (integral) t.key = t.vowel ? t.key.toUpperCase() : [...t.key].map(integralOf).join(''); // integral CARÀCTER a caràcter (3j->·J)
   }
   const plus = new Set();
   if (opts.tonicitat) {
