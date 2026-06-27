@@ -83,18 +83,64 @@ function applyAction(str, act, selS, selE) {
   return out;
 }
 
-// ---- UI ---- (s'escriu directament a #src, que ja és en font XSF: és alhora l'entrada i el render)
+// ---- UI ---- (#src és un contenteditable en font XSF: un <textarea> NO aplica el kern que travessa
+// el bloquejador; un contenteditable renderitza com el text normal i sí que l'aplica.)
 const $ = id => document.getElementById(id);
 const src = $('src');
+
+// text i posicions de selecció (en caràcters) dins del contenteditable; <br> compta com a '\n'
+function getText() {
+  let s = '';
+  const walk = n => { if (n.nodeType === 3) s += n.data; else if (n.nodeName === 'BR') s += '\n'; else n.childNodes.forEach(walk); };
+  src.childNodes.forEach(walk);
+  return s;
+}
+function setText(v) { src.textContent = v; updatePh(); }
+function offsetTo(container, off) {
+  let s = '', done = false;
+  const walk = n => {
+    if (done) return;
+    if (n === container) { if (n.nodeType === 3) s += n.data.slice(0, off); else for (let i = 0; i < off && i < n.childNodes.length; i++) walk(n.childNodes[i]); done = true; return; }
+    if (n.nodeType === 3) s += n.data;
+    else if (n.nodeName === 'BR') s += '\n';
+    else n.childNodes.forEach(walk);
+  };
+  walk(src);
+  return s.length;
+}
+function selOffsets() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !src.contains(sel.anchorNode)) { const n = getText().length; return [n, n]; }
+  const r = sel.getRangeAt(0);
+  const a = offsetTo(r.startContainer, r.startOffset), b = offsetTo(r.endContainer, r.endOffset);
+  return a <= b ? [a, b] : [b, a];
+}
+function setCaret(start, end) {
+  let acc = 0, sN = null, sO = 0, eN = null, eO = 0;
+  const walk = n => {
+    if (n.nodeType === 3) {
+      const L = n.data.length;
+      if (sN === null && acc + L >= start) { sN = n; sO = start - acc; }
+      if (eN === null && acc + L >= end) { eN = n; eO = end - acc; }
+      acc += L;
+    } else if (n.nodeName === 'BR') { acc += 1; }
+    else n.childNodes.forEach(walk);
+  };
+  src.childNodes.forEach(walk);
+  if (sN === null) { sN = src; sO = src.childNodes.length; }
+  if (eN === null) { eN = src; eO = src.childNodes.length; }
+  try { const r = document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) {}
+}
+function updatePh() { src.classList.toggle('empty', getText() === ''); }
 
 // historial d'undo/redo (estats de text)
 let hist = [''], hidx = 0, typeTimer = null;
 function commit(val) { if (val === hist[hidx]) return; hist = hist.slice(0, hidx + 1); hist.push(val); hidx = hist.length - 1; }
-function flushTyping() { if (typeTimer) { clearTimeout(typeTimer); typeTimer = null; } commit(src.value); }
-function undo() { if (hidx > 0) { hidx--; src.value = hist[hidx]; } }
-function redo() { if (hidx < hist.length - 1) { hidx++; src.value = hist[hidx]; } }
+function flushTyping() { if (typeTimer) { clearTimeout(typeTimer); typeTimer = null; } commit(getText()); }
+function undo() { if (hidx > 0) { hidx--; setText(hist[hidx]); setCaret(hist[hidx].length, hist[hidx].length); } }
+function redo() { if (hidx < hist.length - 1) { hidx++; setText(hist[hidx]); setCaret(hist[hidx].length, hist[hidx].length); } }
 
-src.addEventListener('input', () => { clearTimeout(typeTimer); typeTimer = setTimeout(() => commit(src.value), 350); });
+src.addEventListener('input', () => { updatePh(); clearTimeout(typeTimer); typeTimer = setTimeout(() => commit(getText()), 350); });
 src.addEventListener('keydown', e => {
   if (!(e.ctrlKey || e.metaKey)) return;
   const z = e.key === 'z' || e.key === 'Z', y = e.key === 'y' || e.key === 'Y';
@@ -105,12 +151,12 @@ src.addEventListener('keydown', e => {
 document.querySelectorAll('button[data-act]').forEach(b => b.addEventListener('click', () => {
   if (!GRAPHS) return;
   flushTyping();
-  const selS = src.selectionStart, selE = src.selectionEnd;
-  const nv = applyAction(src.value, b.dataset.act, selS, selE);
-  src.value = nv; commit(nv);
-  src.selectionStart = selS; src.selectionEnd = selE; src.focus();
+  const [selS, selE] = selOffsets();
+  const nv = applyAction(getText(), b.dataset.act, selS, selE);
+  setText(nv); commit(nv); setCaret(selS, selE); src.focus();
 }));
 $('undo').addEventListener('click', () => { flushTyping(); undo(); src.focus(); });
 $('redo').addEventListener('click', () => { flushTyping(); redo(); src.focus(); });
 
+updatePh();
 loadMap();

@@ -22,9 +22,10 @@
   button { background:#2a2d36; color:var(--fg); border:1px solid var(--bd); border-radius:8px; padding:8px 12px; font-weight:600; cursor:pointer; }
   button:hover { border-color:var(--acc); }
   /* l'àrea d'edició ja és en font XSF: hi escrius i ho veus renderitzat */
-  #src { width:100%; min-height:440px; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:16px 18px; font-family:'XSF'; font-size:3rem; line-height:1.35; resize:vertical; white-space:pre-wrap; word-break:normal; overflow-wrap:normal;
-    /* força el kerning i les lligatures dins del textarea (els navegadors els desactiven per defecte als camps editables) */
+  /* contenteditable (no <textarea>): un textarea no aplica el kern que travessa el bloquejador */
+  #src { width:100%; min-height:440px; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:16px 18px; font-family:'XSF'; font-size:3rem; line-height:1.35; white-space:pre-wrap; word-break:normal; overflow-wrap:normal; overflow:auto; resize:vertical; outline:none; cursor:text;
     font-kerning:normal; font-variant-ligatures:normal; font-feature-settings:"kern" 1,"liga" 1,"calt" 1; text-rendering:optimizeLegibility; }
+  #src.empty::before { content: attr(data-ph); color: var(--mut); pointer-events:none; }
 </style>
 </head>
 <body>
@@ -43,7 +44,7 @@
       <button data-act="integraCons">Creix</button><button data-act="minvaCons">Minva</button></div>
     <div class="tgroup"><button id="undo" title="Ctrl+Z">↶</button><button id="redo" title="Ctrl+Y">↷</button></div>
   </div>
-  <textarea id="src" spellcheck="false" placeholder="xskri+w en x  S  f"></textarea>
+  <div id="src" contenteditable="plaintext-only" spellcheck="false" data-ph="xskri+w en x  S  f"></div>
 </div>
 <script type="module" src="editor.js"></script>
 </body>
