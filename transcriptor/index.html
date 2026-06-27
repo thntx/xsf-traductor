@@ -18,11 +18,10 @@
   .mut { color: var(--mut); font-size: .85rem; }
   textarea { width:100%; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:14px; font-size:1.5rem; resize:vertical; }
   .row { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; margin:12px 0; }
-  label { font-size:.9rem; }
-  select, input[type=number], input[type=color] { background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:7px; padding:5px 8px; }
+  label { font-size:.9rem; display:inline-flex; align-items:center; gap:6px; }
+  select, input[type=number], input[type=color] { background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:7px; padding:5px 8px; font-size:.9rem; }
   button { background:var(--acc); color:#06121c; border:0; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; }
   button.sec { background:#2a2d36; color:var(--fg); }
-  #mode { font-size:1rem; padding:8px 10px; }
   /* input i sortida costat a costat, mateixa mida aparent */
   .io { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; margin-top:6px; }
   .io > * { margin:0; min-height:180px; }
@@ -89,9 +88,9 @@
     </span>
     <label>Sistema sil·làbic:
       <select id="sistema">
-        <option value="kib">KIB (minúscules)</option>
-        <option value="ktb">KTB (consonant crescuda)</option>
-        <option value="bkk">BKK (vocal crescuda)</option>
+        <option value="kib">KIB</option>
+        <option value="ktb">KTB</option>
+        <option value="bkk">BKK</option>
       </select>
     </label>
     <span id="status">carregant…</span>
