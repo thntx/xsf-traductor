@@ -323,13 +323,27 @@ async function run() {
     updatePreview();
   } catch (e) { $('status').textContent = 'error: ' + e.message; }
 }
+// ajusta l'amplada d'un <select> al text de l'opció seleccionada (mida horitzontal dinàmica)
+let _measSpan;
+function fitSelect(sel) {
+  if (!sel || sel.offsetParent === null) return;            // saltar si està amagat
+  if (!_measSpan) { _measSpan = document.createElement('span'); _measSpan.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;top:-9999px'; document.body.appendChild(_measSpan); }
+  const cs = getComputedStyle(sel);
+  _measSpan.style.font = cs.font; _measSpan.style.fontFamily = cs.fontFamily; _measSpan.style.fontSize = cs.fontSize; _measSpan.style.fontWeight = cs.fontWeight;
+  _measSpan.textContent = sel.options[sel.selectedIndex].text;
+  sel.style.width = (_measSpan.offsetWidth + 36) + 'px';     // text + padding + fletxa
+}
 function syncMode() {
   const m = $('mode').value;
   const ph = { 'cat-xsf': 'text en català…', 'cat-afi': 'text en català…', 'afi-xsf': 'text en AFI…', 'xsf-afi': 'text en XSF…' };
   $('input').placeholder = ph[m];
-  $('catonly').style.display = (m === 'cat-xsf' || m === 'cat-afi') ? '' : 'none';
-  $('ortobox').style.display = OUT_XSF(m) ? '' : 'none';   // les opcions ortogràfiques només per a sortida XSF
-  $('imgbox').style.display = OUT_XSF(m) ? '' : 'none';    // la imatge és en font XSF -> només per a sortida XSF
+  const xsfOut = OUT_XSF(m);
+  $('catonly').style.display = (m === 'cat-xsf' || m === 'cat-afi') ? '' : 'none';  // dialecte: només entrada en català
+  $('sysonly').style.display = xsfOut ? '' : 'none';        // sistema sil·làbic: només sortida XSF
+  $('ortobox').style.display = '';                          // ortogràfiques SEMPRE (amb només els controls rellevants)
+  document.querySelectorAll('#ortobox .xsfonly').forEach(e => { e.style.display = xsfOut ? '' : 'none'; });  // controls XSF-only
+  $('imgbox').style.display = xsfOut ? '' : 'none';
+  ['mode', 'dialecte', 'sistema'].forEach(id => fitSelect($(id)));
 }
 // ---- imatge: canvas de dimensions fixes; ajusta el text en línies (per espais, o si no n'hi ha,
 // per composites/lligatures) i fa la lletra tan gran com cap, OMPLINT el canvas. ----
@@ -437,6 +451,7 @@ async function copyImage() {
   } catch (e) { $('imgmeta').textContent = 'el navegador no permet copiar imatges'; }
 }
 ['mode', 'dialecte', 'tonicitat', 'espais', 'geminacio', 'sistema', 'uphangv', 'uphangc', 'fus_a', 'fus_i', 'fus_E', 'fus_e', 'fus_u', 'fus_O', 'fus_o', 'sx_e', 'sx_i', 'sx_u', 'sx_o', 'xs_e', 'xs_i', 'xs_u', 'xs_o', 'prnd_i', 'prnd_e', 'prnd_u', 'prnd_o'].forEach(id => $(id).addEventListener('change', () => { if (id === 'mode') syncMode(); run(); }));
+['dialecte', 'sistema'].forEach(id => $(id).addEventListener('change', () => fitSelect($(id))));   // reajusta l'amplada al canviar
 $('dl').addEventListener('click', downloadImage);
 $('copyimg').addEventListener('click', copyImage);
 ['imgw', 'imgh', 'imgpad', 'imglh', 'color', 'bgcolor', 'transparent', 'imgalign'].forEach(id => $(id).addEventListener('input', updatePreview));

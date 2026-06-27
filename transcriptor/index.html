@@ -19,9 +19,16 @@
   textarea { width:100%; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:14px; font-size:1.5rem; resize:vertical; }
   .row { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; margin:12px 0; }
   label { font-size:.9rem; display:inline-flex; align-items:center; gap:6px; }
+  .lbl { color:var(--mut); font-size:.85rem; }
+  select { width:auto; }
   select, input[type=number], input[type=color] { background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:7px; padding:5px 8px; font-size:.9rem; }
   button { background:var(--acc); color:#06121c; border:0; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; }
   button.sec { background:#2a2d36; color:var(--fg); }
+  /* checkbox com a botó commutable (estil editor): gris apagat / blau quan està actiu */
+  .tgl { display:inline-flex; align-items:center; gap:0; background:#2a2d36; color:var(--fg); border:1px solid var(--bd); border-radius:8px; padding:7px 12px; font-size:.9rem; font-weight:600; cursor:pointer; user-select:none; }
+  .tgl input { display:none; }
+  .tgl:hover { border-color:var(--acc); }
+  .tgl:has(input:checked) { background:var(--acc); color:#06121c; border-color:var(--acc); }
   /* input i sortida costat a costat, mateixa mida aparent */
   .io { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; margin-top:6px; }
   .io > * { margin:0; min-height:180px; }
@@ -66,7 +73,7 @@
   <h1>Transcriptor</h1>
 
   <div class="row">
-    <label>Mode:
+    <label><span class="lbl">Mode</span>
       <select id="mode">
         <option value="cat-xsf">Català → XSF</option>
         <option value="cat-afi">Català → AFI</option>
@@ -75,7 +82,7 @@
       </select>
     </label>
     <span id="catonly">
-      <label>Dialecte:
+      <label><span class="lbl">Dialecte</span>
         <select id="dialecte">
           <option value="ca">Central</option>
           <option value="ca-va">Valencià</option>
@@ -86,14 +93,16 @@
         </select>
       </label>
     </span>
-    <label>Sistema sil·làbic:
-      <select id="sistema">
-        <option value="kib">KIB</option>
-        <option value="ktb">KTB</option>
-        <option value="bkk">BKK</option>
-      </select>
-    </label>
-    <span id="status">carregant…</span>
+    <span id="sysonly">
+      <label><span class="lbl">Sistema sil·làbic</span>
+        <select id="sistema">
+          <option value="kib">KIB</option>
+          <option value="ktb">KTB</option>
+          <option value="bkk">BKK</option>
+        </select>
+      </label>
+    </span>
+    <span id="status"></span>
   </div>
 
   <div class="io">
@@ -106,11 +115,11 @@
     <summary>Opcions Ortogràfiques</summary>
     <div class="body">
       <div class="row">
-        <label><input type="checkbox" id="tonicitat" checked> Tonicitat</label>
-        <label><input type="checkbox" id="geminacio" checked> Geminació</label>
-        <label><input type="checkbox" id="espais"> Aïllar paraules</label>
-        <label><input type="checkbox" id="uphangv"> Vocals penjades crescudes</label>
-        <label><input type="checkbox" id="uphangc"> Consonants penjades crescudes</label>
+        <label class="tgl xsfonly"><input type="checkbox" id="tonicitat" checked> Tonicitat</label>
+        <label class="tgl xsfonly"><input type="checkbox" id="geminacio" checked> Geminació</label>
+        <label class="tgl"><input type="checkbox" id="espais"> Aïllar paraules</label>
+        <label class="tgl xsfonly"><input type="checkbox" id="uphangv"> Vocals penjades crescudes</label>
+        <label class="tgl xsfonly"><input type="checkbox" id="uphangc"> Consonants penjades crescudes</label>
       </div>
     </div>
   </details>
@@ -121,23 +130,23 @@
       <div class="optblock">
         <span class="opttitle">Fusionar vocals iguals</span>
         <div class="prow">
-          <label><input type="checkbox" id="fus_a" checked> <span class="v">X/A</span></label>
-          <label><input type="checkbox" id="fus_i" checked> <span class="v">I</span></label>
-          <label><input type="checkbox" id="fus_u" checked> <span class="v">U</span></label>
-          <label><input type="checkbox" id="fus_E" checked> <span class="v">È</span></label>
-          <label><input type="checkbox" id="fus_e" checked> <span class="v">É</span></label>
-          <label><input type="checkbox" id="fus_O" checked> <span class="v">Ò</span></label>
-          <label><input type="checkbox" id="fus_o" checked> <span class="v">Ó</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_a" checked> <span class="v">X/A</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_i" checked> <span class="v">I</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_u" checked> <span class="v">U</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_E" checked> <span class="v">È</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_e" checked> <span class="v">É</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_O" checked> <span class="v">Ò</span></label>
+          <label class="tgl"><input type="checkbox" id="fus_o" checked> <span class="v">Ó</span></label>
         </div>
       </div>
 
       <div class="optblock">
         <span class="opttitle">Arrodonir àtones</span>
         <div class="prow">
-          <label><input type="checkbox" id="prnd_i" checked> <span class="v">I</span></label>
-          <label><input type="checkbox" id="prnd_u" checked> <span class="v">U</span></label>
-          <label><input type="checkbox" id="prnd_e" checked> <span class="v">E</span></label>
-          <label><input type="checkbox" id="prnd_o" checked> <span class="v">O</span></label>
+          <label class="tgl"><input type="checkbox" id="prnd_i" checked> <span class="v">I</span></label>
+          <label class="tgl"><input type="checkbox" id="prnd_u" checked> <span class="v">U</span></label>
+          <label class="tgl"><input type="checkbox" id="prnd_e" checked> <span class="v">E</span></label>
+          <label class="tgl"><input type="checkbox" id="prnd_o" checked> <span class="v">O</span></label>
         </div>
       </div>
 
@@ -182,7 +191,7 @@
       <div class="row">
         <label>Text <input type="color" id="color" value="#000000"></label>
         <label>Fons <input type="color" id="bgcolor" value="#ffffff"></label>
-        <label><input type="checkbox" id="transparent"> fons transparent</label>
+        <label class="tgl"><input type="checkbox" id="transparent"> fons transparent</label>
       </div>
       <div id="prevwrap"><canvas id="imgprev"></canvas></div>
       <div class="row">
