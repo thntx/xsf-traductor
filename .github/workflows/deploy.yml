@@ -91,10 +91,14 @@ jobs:
       - name: Muntar el lloc
         run: |
           set -e
-          mkdir -p _site
-          cp index.html app.js mapping.txt XSF.woff2 .nojekyll _site/
+          mkdir -p _site/transcriptor _site/editor
+          # compartits a l'arrel (la font, el mapeig, el motor i el redirector)
+          cp index.html mapping.txt XSF.woff2 .nojekyll _site/
           cp engine/espeak-ng.js engine/espeak-ng.wasm _site/
-          ls -la _site
+          # les dues apps en subcarpetes
+          cp transcriptor/index.html transcriptor/app.js _site/transcriptor/
+          cp editor/index.html editor/editor.js _site/editor/
+          ls -laR _site
 
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }

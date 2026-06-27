@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor</title>
+<style>
+  @font-face { font-family: 'XSF'; src: url('../XSF.woff2') format('woff2'); font-display: swap; }
+  :root { --bg:#14151a; --fg:#e8e8ec; --mut:#8a8a93; --acc:#6ad; --pan:#1d1f26; --bd:#333; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,sans-serif; line-height:1.5; }
+  .topnav { display:flex; gap:4px; background:var(--pan); border-bottom:1px solid var(--bd); padding:8px 16px; }
+  .topnav a { color:var(--mut); text-decoration:none; font-weight:600; padding:6px 14px; border-radius:8px; }
+  .topnav a:hover { color:var(--fg); }
+  .topnav a.active { color:var(--bg); background:var(--acc); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 2.6rem; font-weight: 800; letter-spacing:-.02em; margin: 0 0 14px; }
+  .mut { color: var(--mut); font-size: .85rem; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin:14px 0; }
+  .tgroup { display:flex; gap:6px; align-items:center; }
+  .tgroup .lbl { color:var(--mut); font-size:.78rem; margin-right:2px; }
+  button { background:#2a2d36; color:var(--fg); border:1px solid var(--bd); border-radius:8px; padding:8px 12px; font-weight:600; cursor:pointer; }
+  button:hover { border-color:var(--acc); }
+  .io { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; margin-top:6px; }
+  .io > * { margin:0; min-height:320px; }
+  #src { width:100%; height:100%; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:14px; font-family:ui-monospace,monospace; font-size:1.4rem; resize:vertical; }
+  #outwrap { background:var(--pan); border:1px solid var(--bd); border-radius:12px; padding:14px; overflow:auto; }
+  #out { font-family:'XSF'; font-size:3rem; line-height:1.35; white-space:pre-wrap; word-break:normal; overflow-wrap:normal; }
+  #status { color:var(--acc); font-size:.85rem; min-height:1.2em; margin-top:8px; }
+  @media (max-width:680px) { .io { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="../transcriptor/">Transcriptor</a>
+  <a href="../editor/" class="active">Editor</a>
+</nav>
+<div class="wrap">
+  <h1>Editor</h1>
+  <p class="mut">Escriu directament en XSF. Els botons s'apliquen a la <b>selecció</b>; si no hi ha res seleccionat, a <b>tot</b> el text. Ctrl+Z / Ctrl+Y (o Ctrl+Maj+Z) per desfer i refer.</p>
+  <div class="toolbar">
+    <div class="tgroup"><span class="lbl">Mode</span>
+      <button data-act="kib">KIB</button><button data-act="ktb">KTB</button><button data-act="bkk">BKK</button></div>
+    <div class="tgroup"><span class="lbl">Vocals penjades</span>
+      <button data-act="integraVoc">Integra</button><button data-act="minvaVoc">Minva</button></div>
+    <div class="tgroup"><span class="lbl">Consonants penjades</span>
+      <button data-act="integraCons">Integra</button><button data-act="minvaCons">Minva</button></div>
+    <div class="tgroup"><button id="undo" title="Ctrl+Z">↶</button><button id="redo" title="Ctrl+Y">↷</button></div>
+  </div>
+  <div class="io">
+    <textarea id="src" spellcheck="false" placeholder="escriu en XSF…"></textarea>
+    <div id="outwrap"><div id="out"></div></div>
+  </div>
+  <div id="status">carregant…</div>
+</div>
+<script type="module" src="editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transcriptor</title>
+<style>
+  @font-face { font-family: 'XSF'; src: url('../XSF.woff2') format('woff2'); font-display: swap; }
+  :root { --bg:#14151a; --fg:#e8e8ec; --mut:#8a8a93; --acc:#6ad; --pan:#1d1f26; --bd:#333; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,sans-serif; line-height:1.5; }
+  .topnav { display:flex; gap:4px; background:var(--pan); border-bottom:1px solid var(--bd); padding:8px 16px; }
+  .topnav a { color:var(--mut); text-decoration:none; font-weight:600; padding:6px 14px; border-radius:8px; }
+  .topnav a:hover { color:var(--fg); }
+  .topnav a.active { color:var(--bg); background:var(--acc); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 2.6rem; font-weight: 800; letter-spacing:-.02em; margin: 0 0 14px; }
+  .mut { color: var(--mut); font-size: .85rem; }
+  textarea { width:100%; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:14px; font-size:1.5rem; resize:vertical; }
+  .row { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; margin:12px 0; }
+  label { font-size:.9rem; }
+  select, input[type=number], input[type=color] { background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:7px; padding:5px 8px; }
+  button { background:var(--acc); color:#06121c; border:0; border-radius:8px; padding:9px 16px; font-weight:600; cursor:pointer; }
+  button.sec { background:#2a2d36; color:var(--fg); }
+  #mode { font-size:1rem; padding:8px 10px; }
+  /* input i sortida costat a costat, mateixa mida aparent */
+  .io { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; margin-top:6px; }
+  .io > * { margin:0; min-height:180px; }
+  #input { height:100%; }
+  #outwrap { background:var(--pan); border:1px solid var(--bd); border-radius:12px; padding:14px; overflow:auto; }
+  /* white-space:pre-wrap conserva salts; SENSE word-break per no partir mai lligatures (les línies llargues fan scroll) */
+  #out { font-family:'XSF'; font-size:3rem; line-height:1.35; white-space:pre-wrap; overflow-wrap:normal; word-break:normal; }
+  #out.afi { font-family:ui-monospace,monospace; font-size:1.5rem; line-height:1.5; overflow-wrap:anywhere; }
+  @media (max-width:680px) { .io { grid-template-columns:1fr; } }
+  #debug { white-space:pre-wrap; color:#e88; font-family:ui-monospace,monospace; font-size:.8rem; margin-top:10px; }
+  #status { color:var(--acc); font-size:.85rem; min-height:1.2em; }
+  details { background:var(--pan); border:1px solid var(--bd); border-radius:12px; margin-top:14px; }
+  summary { cursor:pointer; padding:14px 18px; font-weight:600; }
+  details > .body { padding: 4px 18px 18px; }
+  .optblock { margin:8px 0 20px; }
+  .opttitle { font-size:1rem; font-weight:500; color:var(--acc); display:block; margin-bottom:6px; }
+  .lrow { display:flex; gap:6px; align-items:center; margin:4px 0; }
+  .lin { width:56px; background:var(--bg); color:var(--fg); border:1px solid var(--bd); border-radius:6px; padding:5px 7px; font-family:ui-monospace,monospace; }
+  .lin.lsub { width:auto; flex:1; }
+  .lx { background:#3a2730; color:#f9a; padding:5px 9px; border-radius:6px; font-weight:700; }
+  .lbtns { display:flex; gap:8px; margin-top:8px; }
+  .prow { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; margin:4px 0; font-size:.92rem; }
+  .prow label { display:inline-flex; align-items:center; gap:5px; }
+  .prow select { padding:4px 6px; }
+  .v { font-family:ui-monospace,monospace; font-size:1.05em; letter-spacing:.02em; }
+  button:disabled { opacity:.45; cursor:default; }
+  /* preview de la imatge: fons quadriculat perquè es vegi la transparència */
+  #prevwrap { margin:12px 0; padding:10px; border:1px solid var(--bd); border-radius:10px; overflow:auto; max-height:360px;
+    background-color:#fff;
+    background-image:linear-gradient(45deg,#d6d6d6 25%,transparent 25%),linear-gradient(-45deg,#d6d6d6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d6d6d6 75%),linear-gradient(-45deg,transparent 75%,#d6d6d6 75%);
+    background-size:20px 20px; background-position:0 0,0 10px,10px -10px,-10px 0; }
+  #imgprev { display:block; max-width:100%; max-height:340px; margin:0 auto; }
+  #imgmeta { align-self:center; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="../transcriptor/" class="active">Transcriptor</a>
+  <a href="../editor/">Editor</a>
+</nav>
+<div class="wrap">
+  <h1>Transcriptor</h1>
+
+  <div class="row">
+    <label>Mode:
+      <select id="mode">
+        <option value="cat-xsf">Català → XSF</option>
+        <option value="cat-afi">Català → AFI</option>
+        <option value="afi-xsf">AFI → XSF</option>
+        <option value="xsf-afi">XSF → AFI</option>
+      </select>
+    </label>
+    <span id="catonly">
+      <label>Dialecte:
+        <select id="dialecte">
+          <option value="ca">Central</option>
+          <option value="ca-va">Valencià</option>
+          <option value="ca-nw">Nord-occidental</option>
+          <option value="ca-ba">Balear</option>
+          <option value="ca-al">Alguerès</option>
+          <option value="ca-ro">Rossellonès</option>
+        </select>
+      </label>
+    </span>
+    <label>Sistema sil·làbic:
+      <select id="sistema">
+        <option value="kib">KIB (minúscules)</option>
+        <option value="ktb">KTB (consonant integral)</option>
+        <option value="bkk">BKK (vocal integral)</option>
+      </select>
+    </label>
+    <span id="status">carregant…</span>
+  </div>
+
+  <div class="io">
+    <textarea id="input" placeholder="escriu aquí…"></textarea>
+    <div id="outwrap"><div id="out"></div></div>
+  </div>
+  <div id="debug"></div>
+
+  <details open id="ortobox">
+    <summary>Opcions Ortogràfiques</summary>
+    <div class="body">
+      <div class="row">
+        <label><input type="checkbox" id="tonicitat" checked> Tonicitat</label>
+        <label><input type="checkbox" id="geminacio" checked> Geminació</label>
+        <label><input type="checkbox" id="espais"> Aïllar paraules</label>
+        <label><input type="checkbox" id="uphangv"> Vocals penjades integrals</label>
+        <label><input type="checkbox" id="uphangc"> Consonants penjades integrals</label>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opcions Prosòdiques</summary>
+    <div class="body">
+      <div class="optblock">
+        <span class="opttitle">Fusionar vocals iguals</span>
+        <div class="prow">
+          <label><input type="checkbox" id="fus_a" checked> <span class="v">X/A</span></label>
+          <label><input type="checkbox" id="fus_i" checked> <span class="v">I</span></label>
+          <label><input type="checkbox" id="fus_u" checked> <span class="v">U</span></label>
+          <label><input type="checkbox" id="fus_E" checked> <span class="v">È</span></label>
+          <label><input type="checkbox" id="fus_e" checked> <span class="v">É</span></label>
+          <label><input type="checkbox" id="fus_O" checked> <span class="v">Ò</span></label>
+          <label><input type="checkbox" id="fus_o" checked> <span class="v">Ó</span></label>
+        </div>
+      </div>
+
+      <div class="optblock">
+        <span class="opttitle">Arrodonir àtones</span>
+        <div class="prow">
+          <label><input type="checkbox" id="prnd_i" checked> <span class="v">I</span></label>
+          <label><input type="checkbox" id="prnd_u" checked> <span class="v">U</span></label>
+          <label><input type="checkbox" id="prnd_e" checked> <span class="v">E</span></label>
+          <label><input type="checkbox" id="prnd_o" checked> <span class="v">O</span></label>
+        </div>
+      </div>
+
+      <div class="optblock">
+        <span class="opttitle">X/A + Tònica</span>
+        <div class="prow">
+          <label><span class="v">I</span> <select id="sx_i"><option value="elide">Elisió</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">U</span> <select id="sx_u"><option value="elide">Elisió</option><option value="diftong">Diftong</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">E</span> <select id="sx_e"><option value="elide">Elisió</option><option value="hiat">Hiat</option></select></label>
+          <label><span class="v">O</span> <select id="sx_o"><option value="elide">Elisió</option><option value="hiat">Hiat</option></select></label>
+        </div>
+      </div>
+
+      <div class="optblock">
+        <span class="opttitle">Tònica + X/A</span>
+        <div class="prow">
+          <label><span class="v">I</span> <select id="xs_i"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">U</span> <select id="xs_u"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">E</span> <select id="xs_e"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+          <label><span class="v">O</span> <select id="xs_o"><option value="diftong">Diftong</option><option value="hiat">Hiat</option><option value="elide">Elisió</option></select></label>
+        </div>
+      </div>
+
+      <div class="optblock">
+        <span class="opttitle">Substitucions</span>
+        <div id="subsList"></div>
+      </div>
+    </div>
+  </details>
+
+  <details id="imgbox">
+    <summary>Opcions d'Imatge</summary>
+    <div class="body">
+      <div class="row">
+        <label>Amplada <input type="number" id="imgw" value="1920" min="16" max="8000" step="10"></label>
+        <label>Alçada <input type="number" id="imgh" value="1080" min="16" max="8000" step="10"></label>
+        <label>Marge % <input type="number" id="imgpad" value="5" min="0" max="45" step="1"></label>
+        <label>Interlínia <input type="number" id="imglh" value="1" min="0.5" max="3" step="0.1"></label>
+        <label>Alineació
+          <select id="imgalign"><option value="justify-center" selected>Justificat centrat</option><option value="justify">Justificat</option><option value="left">Esquerra</option><option value="center">Centre</option><option value="right">Dreta</option></select></label>
+      </div>
+      <div class="row">
+        <label>Text <input type="color" id="color" value="#000000"></label>
+        <label>Fons <input type="color" id="bgcolor" value="#ffffff"></label>
+        <label><input type="checkbox" id="transparent"> fons transparent</label>
+      </div>
+      <div id="prevwrap"><canvas id="imgprev"></canvas></div>
+      <div class="row">
+        <button id="dl">⬇ Descarrega PNG</button>
+        <button id="copyimg" class="sec">⧉ Copia</button>
+        <span id="imgmeta" class="mut"></span>
+      </div>
+    </div>
+  </details>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

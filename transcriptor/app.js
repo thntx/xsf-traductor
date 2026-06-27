@@ -1,10 +1,10 @@
-import ESpeakNg from './espeak-ng.js';
+import ESpeakNg from '../espeak-ng.js';
 
 // ---- mapeig fonema IPA -> grafia XSF (mapping.txt) ----
 let MAP = null, RMAP = null, GRAPHS = null, IPAKEYS = null;
 async function loadMap() {
   if (MAP) return MAP;
-  const txt = await (await fetch('mapping.txt')).text();
+  const txt = await (await fetch('../mapping.txt')).text();
   MAP = {};
   for (const line of txt.split('\n')) {
     if (!line.trim() || line.trimStart().startsWith('#')) continue;
