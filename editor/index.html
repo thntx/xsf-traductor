@@ -22,7 +22,9 @@
   button { background:#2a2d36; color:var(--fg); border:1px solid var(--bd); border-radius:8px; padding:8px 12px; font-weight:600; cursor:pointer; }
   button:hover { border-color:var(--acc); }
   /* l'àrea d'edició ja és en font XSF: hi escrius i ho veus renderitzat */
-  #src { width:100%; min-height:440px; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:16px 18px; font-family:'XSF'; font-size:3rem; line-height:1.35; resize:vertical; white-space:pre-wrap; word-break:normal; overflow-wrap:normal; }
+  #src { width:100%; min-height:440px; background:var(--pan); color:var(--fg); border:1px solid var(--bd); border-radius:12px; padding:16px 18px; font-family:'XSF'; font-size:3rem; line-height:1.35; resize:vertical; white-space:pre-wrap; word-break:normal; overflow-wrap:normal;
+    /* força el kerning i les lligatures dins del textarea (els navegadors els desactiven per defecte als camps editables) */
+    font-kerning:normal; font-variant-ligatures:normal; font-feature-settings:"kern" 1,"liga" 1,"calt" 1; text-rendering:optimizeLegibility; }
 </style>
 </head>
 <body>
