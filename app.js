@@ -372,13 +372,20 @@ async function renderTo(c) {                               // pinta al canvas c;
     const atoms = (hasSpace ? raw.split(' ') : raw.split('​')).map(a => a.replace(ZW, '')).filter(a => a.length);
     return { hasSpace, atoms };
   });
-  let maxAsc = 0, maxDesc = 0; const spaceW = ctx.measureText(' ').width;
-  const wref = hard.map(hl => hl.atoms.map(a => {           // amplada de cada àtom + ascens/descens reals (per als accents)
-    const m = ctx.measureText(a);
-    maxAsc = Math.max(maxAsc, m.actualBoundingBoxAscent || REF * 0.8);
-    maxDesc = Math.max(maxDesc, m.actualBoundingBoxDescent || REF * 0.25);
-    return m.width;
-  }));
+  const spaceW = ctx.measureText(' ').width;
+  const wref = hard.map(hl => hl.atoms.map(a => ctx.measureText(a).width));   // amplada de cada àtom
+  // ALÇADA MÀXIMA TEÒRICA de línia = extent DECLARAT del font (fontBoundingBox), reforçat amb l'ink
+  // real de les línies senceres (les astes connecten en context i són més altes que un àtom sol).
+  const fm = ctx.measureText('Hpgà+ ');
+  let maxAsc = fm.fontBoundingBoxAscent || 0, maxDesc = fm.fontBoundingBoxDescent || 0;
+  for (const cl of (window._out || '').split('\n')) {
+    if (!cl.trim()) continue;
+    const m = ctx.measureText(cl);
+    maxAsc = Math.max(maxAsc, m.actualBoundingBoxAscent || 0);
+    maxDesc = Math.max(maxDesc, m.actualBoundingBoxDescent || 0);
+  }
+  if (!maxAsc) maxAsc = REF * 0.9;
+  if (!maxDesc) maxDesc = REF * 0.45;
   const extra = maxAsc + maxDesc, lhExtraRef = Math.max(0, o.lh - 1) * REF;   // ink d'una línia (a REF)
   // avanç entre línies base = ink màxim teòric + 2px mínims (interlínia 1) + extra si interlínia > 1.
   // Així una línia amb cua/+ avall i l'accent de la següent no es toquen mai.
