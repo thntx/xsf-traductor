@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Editor</title>
 <style>
-  @font-face { font-family: 'XSF'; src: url('../XSF.woff2?v=3') format('woff2'); font-display: swap; }
+  @font-face { font-family: 'XSF'; src: url('../XSF.woff2?v=4') format('woff2'); font-display: swap; }
   :root { --bg:#14151a; --fg:#e8e8ec; --mut:#8a8a93; --acc:#6ad; --pan:#1d1f26; --bd:#333; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,sans-serif; line-height:1.5; }
@@ -13,6 +13,8 @@
   .topnav a { color:var(--mut); text-decoration:none; font-weight:600; padding:6px 14px; border-radius:8px; }
   .topnav a:hover { color:var(--fg); }
   .topnav a.active { color:var(--bg); background:var(--acc); }
+  .topnav a.fontdl { color:var(--fg); border:1px solid var(--bd); margin-right:8px; }
+  .topnav a.fontdl:hover { border-color:var(--acc); }
   .wrap { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
   h1 { font-size: 2.6rem; font-weight: 800; letter-spacing:-.02em; margin: 0 0 14px; }
   .mut { color: var(--mut); font-size: .85rem; }
@@ -30,6 +32,7 @@
 </head>
 <body>
 <nav class="topnav">
+  <a href="../XSF.ttf" download="XSF.ttf" class="fontdl" title="Descarrega la font">Font</a>
   <a href="../transcriptor/">Transcriptor</a>
   <a href="../editor/" class="active">Editor</a>
 </nav>
@@ -37,7 +40,7 @@
   <h1>Editor</h1>
   <div class="toolbar">
     <div class="tgroup"><span class="lbl">Mode</span>
-      <button data-act="kib">KIB</button><button data-act="ktb">KTB</button><button data-act="bkk">BKK</button></div>
+      <button data-act="kib">KIB</button><button data-act="ktb">KTB</button><button data-act="bkk">BKK</button><button data-act="minima">Mínimes</button></div>
     <div class="tgroup"><span class="lbl">Vocals penjades</span>
       <button data-act="integraVoc">Creix</button><button data-act="minvaVoc">Minva</button></div>
     <div class="tgroup"><span class="lbl">Consonants penjades</span>
@@ -46,6 +49,6 @@
   </div>
   <div id="src" contenteditable="plaintext-only" spellcheck="false" data-ph="xskri+w xn x  S  f"></div>
 </div>
-<script type="module" src="editor.js?v=3"></script>
+<script type="module" src="editor.js?v=4"></script>
 </body>
 </html>

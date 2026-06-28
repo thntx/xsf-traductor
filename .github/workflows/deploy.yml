@@ -93,7 +93,7 @@ jobs:
           set -e
           mkdir -p _site/transcriptor _site/editor
           # compartits a l'arrel (la font, el mapeig, el motor i el redirector)
-          cp index.html mapping.txt XSF.woff2 .nojekyll _site/
+          cp index.html mapping.txt XSF.woff2 XSF.ttf .nojekyll _site/
           cp engine/espeak-ng.js engine/espeak-ng.wasm _site/
           # les dues apps en subcarpetes
           cp transcriptor/index.html transcriptor/app.js _site/transcriptor/

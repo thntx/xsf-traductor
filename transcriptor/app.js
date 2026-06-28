@@ -97,6 +97,9 @@ const DIAC = /[ːʰ‿͡‍]/g;
 const cls = v => ({ 'ɛ': 'e', 'ɔ': 'o', 'ɐ': 'ə', 'ʊ': 'u' }[v] || v);
 const NUMROW_SHIFT ={ 'º': 'ª', '1': '!', '2': '"', '3': '·', '4': '$', '5': '%', '6': '&', '7': '/', '8': '(', '9': ')', '0': '=', "'": '?', '¡': '¿' };
 const integralOf = c => NUMROW_SHIFT[c] || c.toUpperCase();
+const MODE_OPEN = { kib: '', ktb: ']', bkk: '[' };
+const MODE_CHARS = new Set(['[', ']', '{', '}']);
+const ZW = '\u200B';
 
 // ---- segmentadors ----
 // IPA (sense _) -> paraules de fonemes [{ph,stress}] (greedy longest-match)
@@ -120,6 +123,7 @@ function xsfToIpa(xsf) {
   const words = []; let cur = []; let lastVowel = -1; let i = 0;
   const flush = () => { if (cur.length) words.push(cur.join('_')); cur = []; lastVowel = -1; };
   while (i < xsf.length) {
+    if (MODE_CHARS.has(xsf[i]) || xsf[i] === ZW) { i++; continue; }
     if (xsf[i] === ' ') { flush(); i++; continue; }
     if (xsf[i] === '+') { if (lastVowel >= 0) cur[lastVowel] = 'ˈ' + cur[lastVowel]; i++; continue; }
     let g = null;
@@ -185,13 +189,13 @@ function processWords(words, srcWords, opts) {
       else if (!b.comp) b.key = ':';
     }
   }
-  // INTEGRALS: la COMPOSTA puja segons el sistema (ktb=consonant, bkk=vocal); les PENJADES només
-  // pugen si s'activa l'opció corresponent.
+  // INTEGRALS: el sistema sil·làbic ja no es fa amb caixa (KTB/BKK van amb obridor invisible).
+  // Només pugen les PENJADES quan s'activa l'opció corresponent.
   for (const t of live) {
     if (':;'.includes(t.key)) continue;
     const integral = t.vowel
-      ? ((t.comp && opts.sistema === 'bkk') || (!t.comp && opts.upHangVow))
-      : ((t.comp && opts.sistema === 'ktb') || (!t.comp && opts.upHangCons));
+      ? (!t.comp && opts.upHangVow)
+      : (!t.comp && opts.upHangCons);
     if (integral) t.key = t.vowel ? t.key.toUpperCase() : [...t.key].map(integralOf).join(''); // integral CARÀCTER a caràcter (3j->·J)
   }
   const plus = new Set();
@@ -213,11 +217,16 @@ function processWords(words, srcWords, opts) {
   live.forEach((t, i) => {
     if (i > 0) {
       if (opts.espais && live[i].w !== live[i - 1].w) { out += ' '; outD += ' '; }
-      else if (live[i].grp !== live[i - 1].grp) outD += '​';
+      else if (live[i].grp !== live[i - 1].grp) outD += ZW;
     }
     out += t.key; outD += t.key;
     if (plus.has(i)) { const p = (map['ˈ'] || '+'); out += p; outD += p; }
   });
+  const open = MODE_OPEN[opts.sistema] || '';
+  if (open) {
+    out = open + out;
+    outD = open + outD.replaceAll(ZW, ZW + open).replaceAll(' ', ' ' + open);
+  }
   return { xsf: out, xsfD: outD, ipa: ipaShow, unknown: [...unknown] };
 }
 
@@ -379,11 +388,11 @@ async function renderTo(c) {                               // pinta al canvas c;
   const REF = 200;
   await document.fonts.load(REF + 'px XSF');
   ctx.font = REF + 'px XSF';
-  const ZW = /​/g;
+  const ZW_RE = /\u200B/g;
   // línies dures -> àtoms: PARAULES si hi ha espais; si no, COMPOSITES (per no tallar lligatures)
   const hard = src.split('\n').map(raw => {
     const hasSpace = raw.includes(' ');
-    const atoms = (hasSpace ? raw.split(' ') : raw.split('​')).map(a => a.replace(ZW, '')).filter(a => a.length);
+    const atoms = (hasSpace ? raw.split(' ') : raw.split(ZW)).map(a => a.replace(ZW_RE, '')).filter(a => a.length);
     return { hasSpace, atoms };
   });
   const spaceW = ctx.measureText(' ').width;

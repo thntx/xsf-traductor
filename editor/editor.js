@@ -1,4 +1,5 @@
-// ---- Editor XSF: escriu XSF directament; els botons recasen (integral/minúscula) la selecció ----
+// ---- Editor XSF: escriu XSF directament. Els botons de mode posen obridors invisibles;
+// els botons de creix/minva recasen només les penjades. ----
 
 // ---- mapeig (mateix que el transcriptor, sense motor espeak) ----
 let MAP = null, RMAP = null, GRAPHS = null;
@@ -10,6 +11,9 @@ const toBase = g => [...g].map(deIntegral).join('');
 const toIntegral = g => [...g].map(integralOf).join('');
 // vocal segons la LLETRA base (treu accents amb NFD): a e i o u x(=ə). La resta de grafemes són consonants.
 const isVowel = g => 'aeioux'.includes((g.normalize('NFD')[0] || '').toLowerCase());
+const MODE_OPEN = { kib: '', ktb: ']', bkk: '[', minima: '}' };
+const MODE_CHARS = new Set(['[', ']', '{', '}']);
+const RESET = '  ';
 
 async function loadMap() {
   if (MAP) return;
@@ -36,6 +40,7 @@ function tokenize(str) {
   const toks = []; let i = 0, w = 0;
   while (i < str.length) {
     const ch = base[i];
+    if (MODE_CHARS.has(str[i])) { toks.push({ kind: 'mode', s: i, e: i + 1, w }); i++; continue; }
     if (ch === ' ' || ch === '\n' || ch === '\t') { toks.push({ kind: 'sep', s: i, e: i + 1, w }); w++; i++; continue; }
     if (ch === '+') { toks.push({ kind: 'mark', s: i, e: i + 1, w }); i++; continue; }
     let L = 1;                                              // grafema multi-caràcter del mapa (3z, t1…) o un sol caràcter
@@ -59,8 +64,25 @@ function analyze(toks) {
     if (g[i].vowel && !g[i].comp && i + 1 < g.length && g[i + 1].cons && adj(i, i + 1) && !g[i + 1].comp) { g[i].comp = g[i + 1].comp = true; }
 }
 
+function stripModeControls(s) {
+  return s.replace(/[\[\]\{\}]/g, '').replace(/ {2}/g, '');
+}
+
+function applyMode(str, act, selS, selE) {
+  const open = MODE_OPEN[act];
+  const all = selS === selE;
+  const a = all ? 0 : selS, b = all ? str.length : selE;
+  const before = str.slice(0, a), after = str.slice(b);
+  let mid = stripModeControls(str.slice(a, b));
+  if (open) mid = open + mid;
+  else if (!all) mid = RESET + mid;
+  if (!all) mid += RESET;
+  return before + mid + after;
+}
+
 // ---- aplica una acció de recasament al rang [selS,selE) (o a tot si són iguals) ----
 function applyAction(str, act, selS, selE) {
+  if (act in MODE_OPEN) return applyMode(str, act, selS, selE);
   const toks = tokenize(str); analyze(toks);
   const all = selS === selE;
   const inSel = t => all || (t.s < selE && t.e > selS);
